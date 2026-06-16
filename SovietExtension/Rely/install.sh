@@ -304,6 +304,7 @@ insert_framework() {
     echo "    ${LOAD_DYLIB_PATH}"
 
     run_cmd chmod +x "${INSERT_DYLIB_PATH}"
+    run_cmd xattr -rd com.apple.quarantine "${INSERT_DYLIB_PATH}" >/dev/null 2>&1 || true
     run_cmd "${INSERT_DYLIB_PATH}" --all-yes "${LOAD_DYLIB_PATH}" "${BACKUP_PATH}" "${APP_EXECUTABLE_PATH}"
 
     run_cmd chmod +x "${APP_EXECUTABLE_PATH}"
