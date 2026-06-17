@@ -6,7 +6,7 @@
 For开源共产主义，for理想主义，免费的，抽象的，令人愉快的 A Plugin For Mac WeChat > 4.0
 ## Effect
 <p align="center">
-<img src="https://github.com/MustangYM/SovietExtension/blob/main/1.png" width="600px"/>
+<img src="https://github.com/MustangYM/SovietExtension/blob/main/1.1.png" width="600px"/>
 </p>
 <p align="center">
 <img src="https://github.com/MustangYM/SovietExtension/blob/main/2.png" width="600px"/>
