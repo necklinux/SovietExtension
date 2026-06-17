@@ -3,4 +3,69 @@
    uuid = "87B4A06C-8BAE-44DC-B358-36D8C3E6ADDB"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.AddressBreakpoint">
+         <BreakpointContent
+            uuid = "8F661366-AA89-4346-B747-9E4F93C44C0C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "*0x10cb37a20">
+            <Locations>
+               <Location
+                  uuid = "8F661366-AA89-4346-B747-9E4F93C44C0C - e47a69e032446d5f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "___lldb_unnamed_symbol_1ebfa20"
+                  moduleName = "wechat.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.AddressBreakpoint">
+         <BreakpointContent
+            uuid = "4E9EC2BD-73A7-40E8-ACD3-AD04D15E8688"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "*0x10cb3def8">
+            <Locations>
+               <Location
+                  uuid = "4E9EC2BD-73A7-40E8-ACD3-AD04D15E8688 - 9318323d47cac06f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "___lldb_unnamed_symbol_1ec5ef8"
+                  moduleName = "wechat.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.AddressBreakpoint">
+         <BreakpointContent
+            uuid = "7DFB8256-7EE7-405F-9AA5-E48DB3E0DBED"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "*0x10cb3e36c">
+            <Locations>
+               <Location
+                  uuid = "7DFB8256-7EE7-405F-9AA5-E48DB3E0DBED - 934c2ee8c69d51a5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "___lldb_unnamed_symbol_1ec636c"
+                  moduleName = "wechat.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

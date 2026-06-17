@@ -319,12 +319,17 @@ static const YMWeChatAdaptProfile *YMGetActiveProfile(void) {
 
 #pragma mark - 地址辅助
 
-static inline uintptr_t YMRuntimeAddress(uintptr_t staticVA) {
+uintptr_t YMRuntimeAddress(uintptr_t staticVA) {
     if (YMWeChatDylibSlide == 0 || staticVA == 0) {
         return 0;
     }
 
     return YMWeChatDylibSlide + staticVA;
+}
+
+uintptr_t getDylibSlide()
+{
+    return YMWeChatDylibSlide;
 }
 
 static inline void *YMRuntimePointer(uintptr_t staticVA) {
@@ -489,10 +494,10 @@ static NSString *YMBuildAntiRevokeNoticeText(NSString *remoteUserOrSession,
      以后如果想精简，可以只保留第一行和消息时间。
      */
     return [NSString stringWithFormat:
-            @"⚠️苏维埃已拦截到一条撤回消息⚠️\n撤回方/会话：%@\n消息时间：%@\nraw：0x%llx",
+            @"⚠️苏维埃已拦截撤回消息⚠️\n撤回方/会话：%@\n%@",
             remoteUserOrSession ?: @"",
-            messageTimeText ?: @"",
-            (unsigned long long)rawRevokeMessage];
+            messageTimeText ?: @""
+           ];
 }
 
 #pragma mark - 内存写入
@@ -911,6 +916,7 @@ static void YMInstallAntiRevokeIfNeeded(void) {
     });
 }
 
+
 #pragma mark - constructor
 
 __attribute__((constructor))
@@ -966,3 +972,4 @@ static void YMWeChatAntiRevokePatchEntry(void) {
 
     }
 }
+
