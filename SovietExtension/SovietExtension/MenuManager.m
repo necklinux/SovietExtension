@@ -9,15 +9,20 @@
 #import "NSMenuItem+Action.h"
 #import "NSMenu+Action.h"
 #import "YMSwizzledHelper.h"
+#import "MistyModeSettingsWindowController.h"
 
 #ifndef kExitChatroomNickname
 #define kExitChatroomNickname @"YMExitChatroomNickname"
 #endif
 
+@interface MenuManager ()
+@property (nonatomic, strong) NSMenuItem *ym_mistyModeMenuItem;
+@property (nonatomic, strong) MistyModeSettingsWindowController *ym_mistySettingsWindowController;
+@end
+
 @implementation MenuManager
 
 #pragma mark - Singleton
-
 + (instancetype)shareInstance
 {
     static MenuManager *share = nil;
@@ -33,6 +38,7 @@
 - (void)initAssistantMenuItems
 {
     [self ym_registerDefaultBool:NO forKey:kExitChatroomNick];
+    [MistyModeSettingsWindowController registerDefaults];
 
     NSMenuItem *antiUpdateMenu = [self ym_toggleMenuItemWithTitle:@"阻止更新"
                                                               key:kAntiUpdate
@@ -94,6 +100,8 @@
                                                        target:self
                                                 keyEquivalent:@""
                                                         state:NO];
+    
+    NSMenuItem *themeMenu = [self ym_createThemeModeMenu];
    
     NSString *version = [NSString stringWithFormat:@"当前版本 %@", kCurrentVersion];
     NSMenuItem *currentVersionMenu = [NSMenuItem menuItemWithTitle:version
@@ -106,6 +114,7 @@
     NSMenu *subMenu = [[NSMenu alloc] initWithTitle:@"苏维埃助手"];
     [subMenu addItems:@[
         antiUpdateMenu,
+        themeMenu,
         revokeGroup,
         groupMenu,
         autoLoginMenu,
@@ -129,54 +138,105 @@
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kAntiUpdate
-                   informativeText:@"非必要情况千万不要关闭`禁止更新`,否则微信自动更新导致插件失效"];
+                   informativeText:@"非必要情况千万不要关闭`禁止更新`,否则微信自动更新导致插件失效" needSave:YES];
 }
 
 - (void)onAntiRevoke:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kAntiRevoke
-                   informativeText:@"重启微信生效"];
+                   informativeText:@"重启微信生效" needSave:YES];
 }
 
 - (void)onExitChatroom:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kExitChatroom
-                   informativeText:@"重启微信生效\n\n关闭后将完全关闭退群监控；退群昵称开关也不会生效。"];
+                   informativeText:@"重启微信生效\n\n关闭后将完全关闭退群监控；退群昵称开关也不会生效。" needSave:YES];
 }
 
 - (void)onExitChatroomNickname:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kExitChatroomNick
-                   informativeText:@"重启微信生效\n\n关闭后仍保留退群监控，但退群人可能只显示 wxid / memberID。\n部分用户偶发微信闪退，建议先关闭这个开关。"];
+                   informativeText:@"重启微信生效\n\n关闭后仍保留退群监控，但退群人可能只显示 wxid / memberID。\n部分用户偶发微信闪退，建议先关闭这个开关。" needSave:YES];
 }
 
 - (void)onAutoLogin:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kAutoLogin
-                   informativeText:@"重启微信生效"];
+                   informativeText:@"重启微信生效" needSave:YES];
 }
 
 - (void)onRevokeForwardToSelfRealSend:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kRevokeForwardToSelfRealSend
-                   informativeText:@"开启后，撤回的消息将转发到自己的会话，全设备同步。\n转发的消息要显示群名需同时开启「显示退群昵称」。\n注意：退群昵称在部分设备上可能闪退，如遇问题请关闭。\n重启微信生效。"];
+                   informativeText:@"开启后，撤回的消息将转发到自己的会话，全设备同步。\n转发的消息要显示群名需同时开启「显示退群昵称」。\n注意：退群昵称在部分设备上可能闪退，如遇问题请关闭。\n重启微信生效。" needSave:YES];
 }
 
 - (void)onUseSystemWeb:(NSMenuItem *)item
 {
     [self ym_confirmToggleMenuItem:item
                    userDefaultsKey:kUseSystemWeb
-                   informativeText:@"重启微信生效"];
+                   informativeText:@"重启微信生效" needSave:YES];
 }
 
 - (void)onNewWeChat:(NSMenuItem *)item
 {
     [self executeShellCommand:@"open -n /Applications/WeChat.app"];
+}
+
+- (void)onMistyMode:(NSMenuItem *)item
+{
+    self.ym_mistyModeMenuItem = item;
+    [self ym_showMistyModeSettingsWindow:item];
+}
+
+#pragma mark - 主题模式 Menu
+
+- (NSMenuItem *)ym_createThemeModeMenu
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    BOOL mistyEnabled = [defaults boolForKey:kThemeMistyMode];
+    
+    NSMenuItem *mistyModeMenu = [NSMenuItem menuItemWithTitle:@"迷离模式  ▶"
+                                                       action:@selector(onMistyMode:)
+                                                       target:self
+                                                keyEquivalent:@""
+                                                        state:mistyEnabled];
+    self.ym_mistyModeMenuItem = mistyModeMenu;
+    
+    NSMenu *themeSubMenu = [[NSMenu alloc] initWithTitle:@"主题模式"];
+    [themeSubMenu addItem:mistyModeMenu];
+    
+    NSMenuItem *themeMenu = [[NSMenuItem alloc] init];
+    themeMenu.title = @"主题模式";
+    themeMenu.target = self;
+    themeMenu.enabled = YES;
+    themeMenu.submenu = themeSubMenu;
+    
+    return themeMenu;
+}
+
+- (void)ym_showMistyModeSettingsWindow:(NSMenuItem *)item
+{
+    if (!self.ym_mistySettingsWindowController) {
+        self.ym_mistySettingsWindowController = [[MistyModeSettingsWindowController alloc] init];
+        __weak typeof(self) weakSelf = self;
+        self.ym_mistySettingsWindowController.confirmHandler = ^(BOOL isOpen) {
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            strongSelf.ym_mistyModeMenuItem.state = NSControlStateValueOn;
+            if (!strongSelf.hasLoadMistyHook || (strongSelf.hasLoadMistyHook && !isOpen)) {
+                [strongSelf ym_confirmToggleMenuItem:nil
+                               userDefaultsKey:nil
+                                     informativeText:@"重启立即生效" needSave:NO];
+            }
+        };
+    }
+
+    [self.ym_mistySettingsWindowController showWindowCentered];
 }
 
 #pragma mark - Menu Helpers
@@ -210,6 +270,7 @@
 - (void)ym_confirmToggleMenuItem:(NSMenuItem *)item
                  userDefaultsKey:(NSString *)key
                  informativeText:(NSString *)informativeText
+                        needSave:(BOOL)needSave
 {
     BOOL enabled = item.state != NSControlStateValueOn;
     
@@ -224,7 +285,9 @@
         return;
     }
     
-    [self ym_setMenuItem:item enabled:enabled userDefaultsKey:key];
+    if (needSave) {
+        [self ym_setMenuItem:item enabled:enabled userDefaultsKey:key];
+    }
     [self ym_restartWeChatAfterDelay:0.5];
 }
 
