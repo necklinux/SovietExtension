@@ -27,3 +27,4 @@
 # *|*|*|Allow all versions, not recommended
 
 4.1.10.53|4.1.10|268853|Tested on Mac WeChat 4.1.10.53
+4.1.11.23|4.1.11|269079|Tested on Mac WeChat 4.1.11.23
