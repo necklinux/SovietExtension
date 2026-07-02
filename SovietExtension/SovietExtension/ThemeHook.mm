@@ -1,4 +1,3 @@
-//
 //  ThemeHook.m
 //  SovietExtension
 //
@@ -32,6 +31,14 @@ static const CGFloat kYMCarrierAlphaDark = 0.30f;
 static const CGFloat kYMCarrierAlphaLight = 0.015f;
 
 static const NSTimeInterval kYMBlurKeepAliveInterval = 2.0;
+
+/// 流光氛围默认参数。
+/// ColorfulOpacity 的深色/浅色现在统一使用一个值。
+static const CGFloat kYMDefaultColorfulOpacity = 0.42f;
+static const CGFloat kYMDefaultColorfulInternalBlurRadius = 70.0f;
+static const CGFloat kYMMinColorfulInternalBlurRadius = 40.0f;
+static const CGFloat kYMMaxColorfulInternalBlurRadius = 160.0f;
+static const NSTimeInterval kYMDefaultColorfulAnimationDuration = 10.0;
 
 #pragma mark - 私有 CGS 接口声明
 
@@ -81,6 +88,9 @@ static void YMRegisterMistyThemeDefaults(void) {
         kThemeMistyWindowBlurEnabled: @(kYMDefaultWindowBackgroundBlurEnabled),
         kThemeMistyWindowBlurRadius: @(kYMDefaultWindowBackgroundBlurRadius),
         kThemeMistyColorful: @(NO),
+        kThemeMistyColorfulOpacity: @(kYMDefaultColorfulOpacity),
+        kThemeMistyColorfulBlurRadius: @(kYMDefaultColorfulInternalBlurRadius),
+        kThemeMistyColorfulAnimationDuration: @(kYMDefaultColorfulAnimationDuration),
         kThemeMistyCarrierStyle: kYMDefaultCarrierStyle,
         kThemeMistyKeepAlive: @(kYMDefaultBlurKeepAliveEnabled),
     }];
@@ -172,6 +182,21 @@ BOOL YMColorfulBlurBackgroundEnabled(void) {
     if (!YMWindowBackgroundBlurEnabled()) return NO;
     if (YMWindowBackgroundBlurRadius() <= 0) return NO;
     return YES;
+}
+
+CGFloat YMColorfulBlurBackgroundOpacity(void) {
+    CGFloat opacity = YMFloatSetting(kThemeMistyColorfulOpacity, kYMDefaultColorfulOpacity);
+    return MAX(0.0f, MIN(1.0f, opacity));
+}
+
+CGFloat YMColorfulBlurInternalBlurRadius(void) {
+    CGFloat radius = YMFloatSetting(kThemeMistyColorfulBlurRadius, kYMDefaultColorfulInternalBlurRadius);
+    return MAX(kYMMinColorfulInternalBlurRadius, MIN(kYMMaxColorfulInternalBlurRadius, radius));
+}
+
+NSTimeInterval YMColorfulAnimationDuration(void) {
+    CGFloat duration = YMFloatSetting(kThemeMistyColorfulAnimationDuration, kYMDefaultColorfulAnimationDuration);
+    return MAX(2.0f, MIN(60.0f, duration));
 }
 
 static YMColorfulBlurBackgroundView *YMFindColorfulBlurBackgroundViewInContainer(NSView *container) {
@@ -827,3 +852,5 @@ static void YMWeChatAntiRevokePatchEntry(void) {
         });
     }
 }
+
+//

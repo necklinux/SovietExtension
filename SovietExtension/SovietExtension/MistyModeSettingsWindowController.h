@@ -1,4 +1,3 @@
-//
 //  MistyModeSettingsWindowController.h
 //  SovietExtension
 //
@@ -19,6 +18,9 @@ static NSString *kThemeMistyCarrierStyleDark = @"dark";
 static NSString *kThemeMistyCarrierStyleLight = @"light";
 static NSString *kThemeMistyKeepAlive = @"kThemeMistyKeepAlive1.SOVIET";
 static NSString *kThemeMistyColorful = @"kThemeMistyColorful.SOVIET";
+static NSString *kThemeMistyColorfulOpacity = @"kThemeMistyColorfulOpacity.SOVIET";
+static NSString *kThemeMistyColorfulBlurRadius = @"kThemeMistyColorfulBlurRadius.SOVIET";
+static NSString *kThemeMistyColorfulAnimationDuration = @"kThemeMistyColorfulAnimationDuration.SOVIET";
 
 /// 迷离模式设置窗口。
 /// MenuManager 只负责打开这个窗口，具体 UI、读写配置、立即应用效果都在这里处理。
@@ -33,3 +35,4 @@ static NSString *kThemeMistyColorful = @"kThemeMistyColorful.SOVIET";
 @end
 
 NS_ASSUME_NONNULL_END
+//

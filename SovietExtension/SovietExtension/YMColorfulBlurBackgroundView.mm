@@ -8,20 +8,12 @@
 #import "YMColorfulBlurBackgroundView.h"
 #import <CoreImage/CoreImage.h>
 #import <QuartzCore/QuartzCore.h>
+#import <math.h>
 #import "ThemeHook.h"
 
-/// Colorful 背景整体透明度。
-static const CGFloat kYMColorfulOpacityDark = 0.42f;
-static const CGFloat kYMColorfulOpacityLight = 0.26f;
-
-/// Colorful 自身的柔化半径。
-static const CGFloat kYMColorfulInternalBlurRadius = 70.0f;
-
-/// 动态渐变动画速度。数值越大越慢。
-static const NSTimeInterval kYMColorfulAnimationDuration = 10.0;
-
-static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) {
-    return [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a].CGColor;
+static id YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) {
+    NSColor *color = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
+    return (__bridge id)color.CGColor;
 }
 
 @implementation YMColorfulBlurBackgroundView
@@ -91,7 +83,6 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
     for (NSArray<NSNumber *> *pair in points) {
         CGFloat x = pair[0].doubleValue * w;
         CGFloat y = pair[1].doubleValue * h;
-        // rootLayer 比 view 大，这里直接使用 root 坐标系即可。
         [values addObject:[NSValue valueWithPoint:NSMakePoint(x, y)]];
     }
     return values;
@@ -100,12 +91,12 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
 - (NSArray *)ym_colorsForBlobIndex:(NSUInteger)index dark:(BOOL)dark {
     if (dark) {
         NSArray *palette = @[
-            (__bridge id)YMCalibratedColor(0.22, 0.35, 1.00, 0.95),
-            (__bridge id)YMCalibratedColor(0.78, 0.22, 0.95, 0.90),
-            (__bridge id)YMCalibratedColor(0.04, 0.78, 0.86, 0.88),
-            (__bridge id)YMCalibratedColor(1.00, 0.42, 0.18, 0.82),
-            (__bridge id)YMCalibratedColor(0.30, 0.94, 0.56, 0.76),
-            (__bridge id)YMCalibratedColor(0.95, 0.20, 0.52, 0.82),
+            YMCalibratedColor(0.22, 0.35, 1.00, 0.95),
+            YMCalibratedColor(0.78, 0.22, 0.95, 0.90),
+            YMCalibratedColor(0.04, 0.78, 0.86, 0.88),
+            YMCalibratedColor(1.00, 0.42, 0.18, 0.82),
+            YMCalibratedColor(0.30, 0.94, 0.56, 0.76),
+            YMCalibratedColor(0.95, 0.20, 0.52, 0.82),
         ];
         id c0 = palette[index % palette.count];
         id c1 = palette[(index + 2) % palette.count];
@@ -113,12 +104,12 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
         return @[c0, c1, c2, c0];
     } else {
         NSArray *palette = @[
-            (__bridge id)YMCalibratedColor(0.68, 0.82, 1.00, 0.80),
-            (__bridge id)YMCalibratedColor(1.00, 0.72, 0.92, 0.72),
-            (__bridge id)YMCalibratedColor(0.76, 1.00, 0.90, 0.70),
-            (__bridge id)YMCalibratedColor(1.00, 0.88, 0.58, 0.68),
-            (__bridge id)YMCalibratedColor(0.78, 0.72, 1.00, 0.72),
-            (__bridge id)YMCalibratedColor(0.62, 0.96, 1.00, 0.70),
+            YMCalibratedColor(0.68, 0.82, 1.00, 0.80),
+            YMCalibratedColor(1.00, 0.72, 0.92, 0.72),
+            YMCalibratedColor(0.76, 1.00, 0.90, 0.70),
+            YMCalibratedColor(1.00, 0.88, 0.58, 0.68),
+            YMCalibratedColor(0.78, 0.72, 1.00, 0.72),
+            YMCalibratedColor(0.62, 0.96, 1.00, 0.70),
         ];
         id c0 = palette[index % palette.count];
         id c1 = palette[(index + 2) % palette.count];
@@ -129,8 +120,12 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
 
 - (void)ym_rebuildColorfulLayersWithDarkStyle:(BOOL)dark {
     [self.ym_colorRootLayer removeFromSuperlayer];
+    self.ym_colorRootLayer = nil;
 
-    CGFloat blurRadius = MAX(0.0, kYMColorfulInternalBlurRadius);
+    CGFloat opacity = YMColorfulBlurBackgroundOpacity();
+    CGFloat blurRadius = MAX(0.0, YMColorfulBlurInternalBlurRadius());
+    NSTimeInterval animationDuration = MAX(2.0, YMColorfulAnimationDuration());
+
     CGFloat inset = MAX(120.0, blurRadius * 2.0);
     CGRect rootFrame = NSInsetRect(self.bounds, -inset, -inset);
 
@@ -139,13 +134,15 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
     root.masksToBounds = NO;
     root.opaque = NO;
     root.backgroundColor = NSColor.clearColor.CGColor;
-    root.opacity = dark ? kYMColorfulOpacityDark : kYMColorfulOpacityLight;
+    root.opacity = opacity;
 
     if (blurRadius > 0.0) {
         CIFilter *blur = [CIFilter filterWithName:@"CIGaussianBlur"];
         [blur setDefaults];
         [blur setValue:@(blurRadius) forKey:kCIInputRadiusKey];
         root.filters = @[blur];
+    } else {
+        root.filters = nil;
     }
 
     CGFloat maxSide = MAX(CGRectGetWidth(root.bounds), CGRectGetHeight(root.bounds));
@@ -167,7 +164,7 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
 
         CAKeyframeAnimation *move = [CAKeyframeAnimation animationWithKeyPath:@"position"];
         move.values = pathValues;
-        move.duration = kYMColorfulAnimationDuration + (NSTimeInterval)i * 1.75;
+        move.duration = animationDuration + (NSTimeInterval)i * 1.75;
         move.repeatCount = HUGE_VALF;
         move.autoreverses = YES;
         move.calculationMode = kCAAnimationCubicPaced;
@@ -177,7 +174,7 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
 
         CAKeyframeAnimation *color = [CAKeyframeAnimation animationWithKeyPath:@"backgroundColor"];
         color.values = [self ym_colorsForBlobIndex:i dark:dark];
-        color.duration = kYMColorfulAnimationDuration * 1.15 + (NSTimeInterval)i;
+        color.duration = animationDuration * 1.15 + (NSTimeInterval)i;
         color.repeatCount = HUGE_VALF;
         color.autoreverses = YES;
         color.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
@@ -187,7 +184,7 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
         CABasicAnimation *scale = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
         scale.fromValue = @(0.92 + 0.02 * (CGFloat)i);
         scale.toValue = @(1.18 - 0.015 * (CGFloat)i);
-        scale.duration = kYMColorfulAnimationDuration * 0.72 + (NSTimeInterval)i;
+        scale.duration = animationDuration * 0.72 + (NSTimeInterval)i;
         scale.repeatCount = HUGE_VALF;
         scale.autoreverses = YES;
         scale.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
@@ -202,6 +199,9 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
     self.ym_hasBuiltLayers = YES;
     self.ym_lastDarkStyle = dark;
     self.ym_lastSize = self.bounds.size;
+    self.ym_lastOpacity = opacity;
+    self.ym_lastInternalBlurRadius = blurRadius;
+    self.ym_lastAnimationDuration = animationDuration;
 }
 
 - (void)ym_updateColorfulBackgroundIfNeeded {
@@ -216,19 +216,26 @@ static CGColorRef YMCalibratedColor(CGFloat r, CGFloat g, CGFloat b, CGFloat a) 
 
     BOOL dark = YMCarrierStyleIsDark();
     NSSize size = self.bounds.size;
+    CGFloat opacity = YMColorfulBlurBackgroundOpacity();
+    CGFloat blurRadius = YMColorfulBlurInternalBlurRadius();
+    NSTimeInterval animationDuration = YMColorfulAnimationDuration();
+
     BOOL sizeChanged = fabs(size.width - self.ym_lastSize.width) > 2.0 ||
                        fabs(size.height - self.ym_lastSize.height) > 2.0;
     BOOL styleChanged = self.ym_hasBuiltLayers && self.ym_lastDarkStyle != dark;
+    BOOL opacityChanged = self.ym_hasBuiltLayers && fabs(opacity - self.ym_lastOpacity) > 0.001;
+    BOOL blurChanged = self.ym_hasBuiltLayers && fabs(blurRadius - self.ym_lastInternalBlurRadius) > 0.5;
+    BOOL animationChanged = self.ym_hasBuiltLayers && fabs(animationDuration - self.ym_lastAnimationDuration) > 0.05;
 
-    if (!self.ym_hasBuiltLayers || sizeChanged || styleChanged) {
+    // 柔化半径和动画速度影响 layer/filter/animation，需要重建。
+    // 透明度虽然可以直接改 root.opacity，但为了和设置状态完全一致，也一起走统一刷新。
+    if (!self.ym_hasBuiltLayers || sizeChanged || styleChanged || opacityChanged || blurChanged || animationChanged) {
         [self ym_rebuildColorfulLayersWithDarkStyle:dark];
     } else {
-        CGFloat blurRadius = MAX(0.0, kYMColorfulInternalBlurRadius);
         CGFloat inset = MAX(120.0, blurRadius * 2.0);
         self.ym_colorRootLayer.frame = NSInsetRect(self.bounds, -inset, -inset);
-        self.ym_colorRootLayer.opacity = dark ? kYMColorfulOpacityDark : kYMColorfulOpacityLight;
+        self.ym_colorRootLayer.opacity = opacity;
     }
 }
-
 
 @end
