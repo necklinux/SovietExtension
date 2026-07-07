@@ -10,7 +10,7 @@
 //    RevokePatch 中 UpdateSessionCache hook 提供的群名缓存（YMCachedRoomName）
 //
 //  思路：撤回回调里拿到原始消息内容，构造 type=5 文本消息通过 SendMsg CGI
-//  发给自己。群聊群名从缓存取，未命中回退为 roomID。0 新增 hook 点。
+//  发给自己。群聊群名从缓存取，未命中回退为“未知群聊”。0 新增 hook 点。
 //
 
 #import <Foundation/Foundation.h>

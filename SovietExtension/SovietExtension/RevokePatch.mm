@@ -556,6 +556,11 @@ static BOOL YMIsGroupExitNicknameEnabled(void) {
     return YMFeatureGroupExitMonitorEnabled && YMFeatureGroupExitNicknameEnabled;
 }
 
+static BOOL YMShouldEnableRoomNameCache(void) {
+    return YMIsGroupExitMonitorEnabled() &&
+           (YMFeatureGroupExitNicknameEnabled || YMRevokeRealSendForwardEnabled());
+}
+
 static BOOL YMIsAntiRevokeEnabled(void) {
     return YMFeatureAntiRevokeEnabled;
 }
@@ -3218,10 +3223,10 @@ static void YMGroupExitUpdateSessionCacheHook(uint64_t a1, int64_t a2, int64_t a
             }
         }
 
-        if (YMIsGroupExitMonitorEnabled()) {
+        if (YMIsGroupExitNicknameEnabled()) {
             YMGroupExitFlushPreloadRooms("session_service UpdateSessionCache");
             YMGroupExitFlushPendingNotices("session_service UpdateSessionCache");
-        } else {
+        } else if (!YMIsGroupExitMonitorEnabled()) {
             YMGroupExitClearRuntimeStateIfDisabled("session_service UpdateSessionCache");
         }
     }
@@ -3298,7 +3303,7 @@ static BOOL YMPatchGroupExitMonitorWithSlide(intptr_t slide, NSString *source) {
     uintptr_t dbApplyTarget = YMRuntimeAddress(profile->groupExitDBApplyVA);
     uintptr_t fmessagePreTarget = YMRuntimeAddress(profile->groupExitFMessagePreVA);
     BOOL nicknameEnabled = YMIsGroupExitNicknameEnabled();
-    BOOL updateSessionCacheHookEnabled = nicknameEnabled;
+    BOOL updateSessionCacheHookEnabled = YMShouldEnableRoomNameCache();
     BOOL nicknamePreloadHookEnabled = nicknameEnabled;
 
     uintptr_t updateSessionCacheTarget = updateSessionCacheHookEnabled ? YMRuntimeAddress(profile->groupExitUpdateSessionCacheVA) : 0;
@@ -3340,8 +3345,10 @@ static BOOL YMPatchGroupExitMonitorWithSlide(intptr_t slide, NSString *source) {
                                                              "group exit session_service::UpdateSessionCache",
                                                              source);
     } else {
-        YMLog(@"[GroupExitMonitor] UpdateSessionCache hook skipped. nickname=%@ profile=%s",
+        YMLog(@"[GroupExitMonitor] UpdateSessionCache hook skipped. roomNameCache=%@ nickname=%@ revokeForward=%@ profile=%s",
+              updateSessionCacheHookEnabled ? @"ON" : @"OFF",
               nicknameEnabled ? @"ON" : @"OFF",
+              YMRevokeRealSendForwardEnabled() ? @"ON" : @"OFF",
               profile ? profile->displayName : "NULL");
     }
 
