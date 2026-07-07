@@ -43,7 +43,7 @@
 //     +0x268(616) = 有效标志 (0=已删除)
 //
 //  ★ 群名获取（0 新增 hook/VM 地址，复用已有基础设施）：
-//     YMCachedRoomName(roomID) 查缓存，未命中回退为 roomID。
+//     YMCachedRoomName(roomID) 查缓存，未命中回退为“未知群聊”。
 //
 //  ★ 图片/视频/文件 转发（TODO，当前仅发文本通知）：
 //     当前只发送提醒，不实际转发媒体内容。
@@ -262,7 +262,7 @@ static NSString *YMBuildRevokeForwardNotice(NSString *sessionText,
 
     if ([sessionText containsString:@"@chatroom"]) {
         NSString *roomName = YMCachedRoomName(sessionText);
-        [notice appendFormat:@"群名:%@\n", roomName.length > 0 ? roomName : (sessionText.length > 0 ? sessionText : @"未知群聊")];
+        [notice appendFormat:@"群名:%@\n", roomName.length > 0 ? roomName : @"未知群聊"];
     }
 
     [notice appendFormat:@"撤回人:%@\n", revokerDisplay.length > 0 ? revokerDisplay : @"***"];
